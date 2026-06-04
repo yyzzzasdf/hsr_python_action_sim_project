@@ -1,0 +1,10 @@
+name: hsr-sim
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - plotly
+  - streamlit
+  - openpyxl
