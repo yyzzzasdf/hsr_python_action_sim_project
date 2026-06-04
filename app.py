@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 
 from hsr_core import SimParams, simulate_action
+from hsr_ui import inject_number_input_wheel, int_param, percent_param
 from hsr_plotting import (
     plot_merged_action_axis,
     plot_separated_action_axis,
@@ -15,20 +16,45 @@ from hsr_plotting import (
 st.set_page_config(page_title="HSR 行动轴仿真器", layout="wide")
 st.title("星穹铁道行动轴交互仿真器")
 
+inject_number_input_wheel()
+
 with st.sidebar:
+    st.caption("数字框可键盘输入；悬停或聚焦后滚轮按步长微调。")
     st.header("基础参数")
 
-    tmax = st.number_input("仿真总行动值", min_value=100, max_value=5000, value=500, step=50)
+    tmax = int_param(
+        "仿真总行动值",
+        min_value=100,
+        max_value=5000,
+        value=500,
+        step=50,
+        key="tmax",
+    )
 
-    v_sparkle = st.slider("花火速度", min_value=50, max_value=250, value=160, step=1)
-    v_archer = st.slider("Archer速度", min_value=50, max_value=250, value=120, step=1)
-    v_l = st.slider("L速度", min_value=50, max_value=250, value=100, step=1)
+    v_sparkle = int_param("花火速度", min_value=50, max_value=250, value=160, step=1, key="v_sparkle")
+    v_archer = int_param("Archer速度", min_value=50, max_value=250, value=120, step=1, key="v_archer")
+    v_l = int_param("L速度", min_value=50, max_value=250, value=100, step=1, key="v_l")
 
     st.header("规则参数")
 
-    sparkle_initial_advance = st.slider("花火入战斗行动提前百分比", 0, 100, 40, 1) / 100.0
-    sparkle_advance = st.slider("花火每次行动提前百分比", 0, 100, 50, 1) / 100.0
-    l_speed_bonus = st.slider("L第一次行动后速度增加", 0, 100, 20, 1)
+    sparkle_initial_advance = percent_param(
+        "花火入战斗行动提前百分比",
+        value_pct=40,
+        key="sparkle_initial_advance_pct",
+    )
+    sparkle_advance = percent_param(
+        "花火每次行动提前百分比",
+        value_pct=50,
+        key="sparkle_advance_pct",
+    )
+    l_speed_bonus = int_param(
+        "L第一次行动后速度增加",
+        min_value=0,
+        max_value=100,
+        value=20,
+        step=1,
+        key="l_speed_bonus",
+    )
 
     sparkle_policy = st.selectbox(
         "花火拉条策略",
@@ -113,17 +139,24 @@ with tab4:
     col_a, col_b, col_c = st.columns(3)
 
     with col_a:
-        archer_min = st.number_input("Archer速度下限", value=100, step=1)
-        archer_max = st.number_input("Archer速度上限", value=140, step=1)
-        archer_step = st.number_input("Archer速度步长", value=5, min_value=1, step=1)
+        archer_min = int_param("Archer速度下限", min_value=1, max_value=500, value=100, step=1, key="archer_min")
+        archer_max = int_param("Archer速度上限", min_value=1, max_value=500, value=140, step=1, key="archer_max")
+        archer_step = int_param("Archer速度步长", min_value=1, max_value=100, value=5, step=1, key="archer_step")
 
     with col_b:
-        l_min = st.number_input("L速度下限", value=90, step=1)
-        l_max = st.number_input("L速度上限", value=130, step=1)
-        l_step = st.number_input("L速度步长", value=5, min_value=1, step=1)
+        l_min = int_param("L速度下限", min_value=1, max_value=500, value=90, step=1, key="l_min")
+        l_max = int_param("L速度上限", min_value=1, max_value=500, value=130, step=1, key="l_max")
+        l_step = int_param("L速度步长", min_value=1, max_value=100, value=5, step=1, key="l_step")
 
     with col_c:
-        sweep_v_sparkle = st.number_input("固定花火速度", value=v_sparkle, step=1)
+        sweep_v_sparkle = int_param(
+            "固定花火速度",
+            min_value=50,
+            max_value=250,
+            value=v_sparkle,
+            step=1,
+            key="sweep_v_sparkle",
+        )
         run_sweep = st.button("开始扫描")
 
     if run_sweep:

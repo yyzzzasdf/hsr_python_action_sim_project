@@ -102,6 +102,7 @@ alternate
 ```text
 FRAMEWORK.md            项目架构与仿真流程（框架梳理）
 app.py                  Streamlit 交互界面
+hsr_ui.py               数字参数输入（键盘 + 滚轮）
 hsr_core.py             核心事件驱动仿真
 hsr_plotting.py         Plotly 绘图函数
 run_demo.py             非交互演示
