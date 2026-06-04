@@ -1,0 +1,60 @@
+# =====================
+# Python cache
+# =====================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =====================
+# Virtual environments
+# =====================
+.venv/
+venv/
+env/
+env_hsr/
+ENV/
+*.egg-info/
+
+# =====================
+# Streamlit
+# =====================
+.streamlit/secrets.toml
+
+# =====================
+# Generated demo outputs
+# =====================
+demo_action_axis.html
+demo_action_axis_separated.html
+demo_action_result.xlsx
+
+# =====================
+# Generated sweep outputs
+# =====================
+speed_sweep_result.xlsx
+speed_sweep_waste_heatmap.html
+speed_sweep_alternation_heatmap.html
+
+# =====================
+# Other generated outputs
+# =====================
+*.log
+*.tmp
+
+# 如果你不想同步所有 Excel 结果，可以打开下一行
+# *.xlsx
+
+# 如果你不想同步所有 HTML 结果，可以打开下一行
+# *.html
+
+# =====================
+# IDE / editor
+# =====================
+.vscode/
+.idea/
+
+# =====================
+# OS files
+# =====================
+.DS_Store
+Thumbs.db
+desktop.ini
