@@ -15,7 +15,7 @@ def main() -> None:
     print(advance_df.to_string(index=False))
 
     print("\n===================== 判定结果 =====================")
-    print("Archer / 远坂凛实际行动：", "严格交替" if flags["ActualAltOK"] else "不是严格交替")
+    print("Archer / L实际行动：", "严格交替" if flags["ActualAltOK"] else "不是严格交替")
     print("花火拉条目标：", "严格交替" if flags["TargetAltOK"] else "不是严格交替")
 
     fig_merged = plot_merged_action_axis(action_df, advance_df, params)

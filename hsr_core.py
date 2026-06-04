@@ -8,13 +8,13 @@ import pandas as pd
 
 SPARKLE = 0
 ARCHER = 1
-RIN = 2
-CHAR_NAMES = ["花火", "Archer", "远坂凛"]
+L = 2
+CHAR_NAMES = ["花火", "Archer", "L"]
 
 SparklePolicy = Literal[
     "alternate",
     "always_archer",
-    "always_rin",
+    "always_l",
     "min_progress",
     "max_remaining_av",
     "avoid_waste",
@@ -40,11 +40,11 @@ class SimParams:
     # Sparkle advance effect.
     sparkle_advance: float = 0.50
 
-    # Rin speed bonus after her first action.
-    rin_speed_bonus: int = 20
+    # L speed bonus after first action.
+    l_speed_bonus: int = 20
 
-    # Same-AV action priority. Default: Sparkle > Archer > Rin.
-    priority: tuple[int, int, int] = (SPARKLE, ARCHER, RIN)
+    # Same-AV action priority. Default: Sparkle > Archer > L.
+    priority: tuple[int, int, int] = (SPARKLE, ARCHER, L)
 
     # Sparkle targeting policy.
     sparkle_policy: SparklePolicy = "alternate"
@@ -61,41 +61,41 @@ def choose_sparkle_target(
     policy = params.sparkle_policy
 
     if policy == "alternate":
-        return ARCHER if sparkle_turn_count % 2 == 1 else RIN
+        return ARCHER if sparkle_turn_count % 2 == 1 else L
 
     if policy == "always_archer":
         return ARCHER
 
-    if policy == "always_rin":
-        return RIN
+    if policy == "always_l":
+        return L
 
     if policy == "min_progress":
-        return ARCHER if progress[ARCHER] <= progress[RIN] else RIN
+        return ARCHER if progress[ARCHER] <= progress[L] else L
 
     if policy == "max_remaining_av":
         remain_archer = (params.gauge_max - progress[ARCHER]) / speed[ARCHER]
-        remain_rin = (params.gauge_max - progress[RIN]) / speed[RIN]
-        return ARCHER if remain_archer >= remain_rin else RIN
+        remain_l = (params.gauge_max - progress[L]) / speed[L]
+        return ARCHER if remain_archer >= remain_l else L
 
     if policy == "avoid_waste":
         add_progress = params.gauge_max * params.sparkle_advance
         waste_archer = max(0.0, progress[ARCHER] + add_progress - params.gauge_max)
-        waste_rin = max(0.0, progress[RIN] + add_progress - params.gauge_max)
+        waste_l = max(0.0, progress[L] + add_progress - params.gauge_max)
 
-        if waste_archer < waste_rin:
+        if waste_archer < waste_l:
             return ARCHER
-        if waste_rin < waste_archer:
-            return RIN
+        if waste_l < waste_archer:
+            return L
 
         remain_archer = (params.gauge_max - progress[ARCHER]) / speed[ARCHER]
-        remain_rin = (params.gauge_max - progress[RIN]) / speed[RIN]
-        return ARCHER if remain_archer >= remain_rin else RIN
+        remain_l = (params.gauge_max - progress[L]) / speed[L]
+        return ARCHER if remain_archer >= remain_l else L
 
     raise ValueError(f"Unsupported sparkle_policy: {policy}")
 
 
 def check_alternation(action_df: pd.DataFrame, advance_df: pd.DataFrame) -> dict:
-    """Check actual Archer/Rin action alternation and Sparkle target alternation."""
+    """Check actual Archer/L action alternation and Sparkle target alternation."""
 
     non_sparkle = action_df[action_df["Character"] != "花火"].copy()
     seq = non_sparkle["Character"].tolist()
@@ -143,7 +143,7 @@ def simulate_action(
 
     speed = np.asarray(speed0, dtype=float).reshape(-1)
     if speed.size != 3:
-        raise ValueError("speed0 must contain three values: [Sparkle, Archer, Rin].")
+        raise ValueError("speed0 must contain three values: [Sparkle, Archer, L].")
 
     speed = np.round(speed).astype(float)
     if np.any(speed <= 0):
@@ -155,7 +155,7 @@ def simulate_action(
 
     action_count = np.zeros(3, dtype=int)
     sparkle_turn_count = 0
-    rin_first_action_done = False
+    l_first_action_done = False
 
     action_rows = []
     advance_rows = []
@@ -193,9 +193,9 @@ def simulate_action(
 
             progress[actor] = 0.0
 
-            if actor == RIN and not rin_first_action_done:
-                rin_first_action_done = True
-                speed[RIN] += params.rin_speed_bonus
+            if actor == L and not l_first_action_done:
+                l_first_action_done = True
+                speed[L] += params.l_speed_bonus
 
             if actor == SPARKLE:
                 sparkle_turn_count += 1
@@ -264,7 +264,7 @@ def simulate_action(
         "speed": speed.copy(),
         "action_count": action_count.copy(),
         "sparkle_turn_count": sparkle_turn_count,
-        "rin_first_action_done": rin_first_action_done,
+        "l_first_action_done": l_first_action_done,
     }
 
     return action_df, advance_df, flags, final_state

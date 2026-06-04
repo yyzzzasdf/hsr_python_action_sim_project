@@ -6,15 +6,15 @@
 
 ## 功能
 
-- 三角色行动轴仿真：花火、Archer、远坂凛
+- 三角色行动轴仿真：花火、Archer、L
 - 整数速度滑条
 - 花火开局行动提前 40%
 - 花火每次行动后给目标行动提前 50%
-- 默认目标顺序：Archer / 远坂凛交替
+- 默认目标顺序：Archer / L 交替
 - Archer 速度固定
-- 远坂凛第一次行动后速度 +20
+- L 第一次行动后速度 +20
 - 自动判定花火拉条是否浪费、每次浪费多少
-- 自动判定 Archer 和远坂凛实际行动是否严格交替
+- 自动判定 Archer 和 L 实际行动是否严格交替
 - 交互式行动轴图
 - 拉条浪费热力图
 - 严格交替判定热力图，0/1 两种颜色显示
@@ -85,7 +85,7 @@ choose_sparkle_target(...)
 ```text
 alternate
 always_archer
-always_rin
+always_l
 min_progress
 max_remaining_av
 avoid_waste

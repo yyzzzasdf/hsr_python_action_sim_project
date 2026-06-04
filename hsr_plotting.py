@@ -188,18 +188,18 @@ def plot_waste_heatmap(
     result_df: pd.DataFrame,
     v_sparkle: int,
     v_archer_list: list[int] | np.ndarray,
-    v_rin_list: list[int] | np.ndarray,
+    v_l_list: list[int] | np.ndarray,
 ) -> go.Figure:
     """Plot heatmap of total Sparkle advance waste."""
 
-    z = np.full((len(v_rin_list), len(v_archer_list)), np.nan)
+    z = np.full((len(v_l_list), len(v_archer_list)), np.nan)
 
-    for i, v_rin in enumerate(v_rin_list):
+    for i, v_l in enumerate(v_l_list):
         for j, v_archer in enumerate(v_archer_list):
             idx = (
                 (result_df["vSparkle"] == v_sparkle)
                 & (result_df["vArcher"] == v_archer)
-                & (result_df["vRin"] == v_rin)
+                & (result_df["vL"] == v_l)
             )
             if idx.any():
                 z[i, j] = float(result_df.loc[idx, "WasteTotalPercent"].iloc[0])
@@ -207,13 +207,13 @@ def plot_waste_heatmap(
     fig = go.Figure(
         data=go.Heatmap(
             x=list(v_archer_list),
-            y=list(v_rin_list),
+            y=list(v_l_list),
             z=z,
             colorscale="Viridis",
             colorbar=dict(title="浪费百分比"),
             hovertemplate=(
                 "Archer速度：%{x}<br>"
-                "远坂凛速度：%{y}<br>"
+                "L速度：%{y}<br>"
                 "总浪费：%{z:.2f}%<extra></extra>"
             ),
         )
@@ -222,7 +222,7 @@ def plot_waste_heatmap(
     fig.update_layout(
         title=f"花火拉条总浪费百分比，花火速度 = {v_sparkle}",
         xaxis_title="Archer 速度",
-        yaxis_title="远坂凛速度",
+        yaxis_title="L 速度",
         height=560,
     )
 
@@ -233,18 +233,18 @@ def plot_alternation_heatmap(
     result_df: pd.DataFrame,
     v_sparkle: int,
     v_archer_list: list[int] | np.ndarray,
-    v_rin_list: list[int] | np.ndarray,
+    v_l_list: list[int] | np.ndarray,
 ) -> go.Figure:
-    """Plot heatmap of actual Archer/Rin strict alternation."""
+    """Plot heatmap of actual Archer/L strict alternation."""
 
-    z = np.full((len(v_rin_list), len(v_archer_list)), np.nan)
+    z = np.full((len(v_l_list), len(v_archer_list)), np.nan)
 
-    for i, v_rin in enumerate(v_rin_list):
+    for i, v_l in enumerate(v_l_list):
         for j, v_archer in enumerate(v_archer_list):
             idx = (
                 (result_df["vSparkle"] == v_sparkle)
                 & (result_df["vArcher"] == v_archer)
-                & (result_df["vRin"] == v_rin)
+                & (result_df["vL"] == v_l)
             )
             if idx.any():
                 z[i, j] = float(result_df.loc[idx, "ActualAltOK"].iloc[0])
@@ -259,7 +259,7 @@ def plot_alternation_heatmap(
     fig = go.Figure(
         data=go.Heatmap(
             x=list(v_archer_list),
-            y=list(v_rin_list),
+            y=list(v_l_list),
             z=z,
             zmin=0,
             zmax=1,
@@ -267,16 +267,16 @@ def plot_alternation_heatmap(
             colorbar=dict(title="是否交替", tickvals=[0, 1], ticktext=["0 不严格", "1 严格"]),
             hovertemplate=(
                 "Archer速度：%{x}<br>"
-                "远坂凛速度：%{y}<br>"
+                "L速度：%{y}<br>"
                 "严格交替：%{z}<extra></extra>"
             ),
         )
     )
 
     fig.update_layout(
-        title=f"Archer / 远坂凛是否严格交替，花火速度 = {v_sparkle}",
+        title=f"Archer / L 是否严格交替，花火速度 = {v_sparkle}",
         xaxis_title="Archer 速度",
-        yaxis_title="远坂凛速度",
+        yaxis_title="L 速度",
         height=560,
     )
 
