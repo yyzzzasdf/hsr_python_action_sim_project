@@ -2,6 +2,8 @@
 
 这是一个 Python 版《崩坏：星穹铁道》行动轴仿真项目，功能对应之前的 MATLAB 版本，并额外支持 Streamlit 交互界面。
 
+架构与仿真流程说明见 [FRAMEWORK.md](FRAMEWORK.md)。
+
 ## 功能
 
 - 三角色行动轴仿真：花火、Archer、远坂凛
@@ -98,6 +100,7 @@ alternate
 ## 文件说明
 
 ```text
+FRAMEWORK.md            项目架构与仿真流程（框架梳理）
 app.py                  Streamlit 交互界面
 hsr_core.py             核心事件驱动仿真
 hsr_plotting.py         Plotly 绘图函数
