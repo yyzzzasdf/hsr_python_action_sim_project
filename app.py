@@ -4,7 +4,17 @@ import io
 import pandas as pd
 import streamlit as st
 
-from hsr_core import SimParams, simulate_action
+from hsr_core import SPARKLE_POLICY_OPTIONS, SimParams, simulate_action
+from hsr_manual_ui import (
+    build_sim_params,
+    init_manual_state,
+    on_sidebar_policy_change,
+    policy_selectbox_index,
+    prune_stale_overrides,
+    render_manual_strip_below_chart,
+    sync_overrides_after_panel,
+    sync_strip_widgets_if_context_changed,
+)
 from hsr_ui import inject_number_input_wheel, int_param, percent_param
 from hsr_plotting import (
     plot_merged_action_axis,
@@ -17,6 +27,7 @@ st.set_page_config(page_title="HSR 行动轴仿真器", layout="wide")
 st.title("星穹铁道行动轴交互仿真器")
 
 inject_number_input_wheel()
+init_manual_state()
 
 with st.sidebar:
     st.caption("数字框可键盘输入；悬停或聚焦后滚轮按步长微调。")
@@ -58,23 +69,43 @@ with st.sidebar:
 
     sparkle_policy = st.selectbox(
         "花火拉条策略",
-        ["alternate", "always_archer", "always_l", "min_progress", "max_remaining_av", "avoid_waste"],
-        index=0,
+        SPARKLE_POLICY_OPTIONS,
+        index=policy_selectbox_index(),
+        key="sparkle_policy_select",
+        help="切换策略后，图下 A/L 会自动按该策略预选；改任一次即切手动。",
     )
+    on_sidebar_policy_change(sparkle_policy)
 
     offset_on = st.checkbox("同行动值竖线轻微错开", value=False)
 
-params = SimParams(
+speed0 = (v_sparkle, v_archer, v_l)
+strip_sync_signature = "|".join(
+    [
+        sparkle_policy,
+        str(tmax),
+        str(v_sparkle),
+        str(v_archer),
+        str(v_l),
+        str(sparkle_initial_advance),
+        str(sparkle_advance),
+        str(l_speed_bonus),
+        str(offset_on),
+    ]
+)
+sync_strip_widgets_if_context_changed(strip_sync_signature, sparkle_policy)
+overrides_used = dict(st.session_state.sparkle_manual_overrides)
+
+params = build_sim_params(
     tmax=float(tmax),
-    speed0=(v_sparkle, v_archer, v_l),
+    speed0=speed0,
     sparkle_initial_advance=sparkle_initial_advance,
     sparkle_advance=sparkle_advance,
     l_speed_bonus=l_speed_bonus,
-    sparkle_policy=sparkle_policy,
+    sidebar_policy=sparkle_policy,
 )
 
-speed0 = (v_sparkle, v_archer, v_l)
-action_df, advance_df, flags, final_state = simulate_action(speed0, params)
+action_df, advance_df, flags, _final_state = simulate_action(speed0, params)
+prune_stale_overrides(advance_df)
 
 waste_num = int(advance_df["IsWasted"].sum()) if not advance_df.empty else 0
 waste_total = float(advance_df["WastePercent"].sum()) if not advance_df.empty else 0.0
@@ -93,9 +124,24 @@ x_offset = (-0.35, 0.0, 0.35) if offset_on else (0.0, 0.0, 0.0)
 
 tab1, tab2, tab3, tab4 = st.tabs(["合并行动轴", "分角色行动轴", "行动与拉条表", "速度鲁棒性扫描"])
 
+new_overrides: dict[int, int] = {}
+
 with tab1:
     fig = plot_merged_action_axis(action_df, advance_df, params, x_offset=x_offset)
     st.plotly_chart(fig, use_container_width=True)
+
+    new_overrides = render_manual_strip_below_chart(
+        advance_df,
+        action_df,
+        params,
+        sparkle_policy,
+        overrides_used,
+        tmax=float(tmax),
+        x_offset=x_offset,
+    )
+
+if sync_overrides_after_panel(new_overrides, sparkle_policy):
+    st.rerun()
 
 with tab2:
     fig = plot_separated_action_axis(action_df, advance_df, params)
@@ -117,6 +163,9 @@ with tab3:
                 "vSparkle": v_sparkle,
                 "vArcher": v_archer,
                 "vL": v_l,
+                "SparklePolicy": sparkle_policy,
+                "PolicyBase": st.session_state.sparkle_policy_base,
+                "ManualOverrides": len(overrides_used),
                 "WasteNum": waste_num,
                 "WasteTotalPercent": waste_total,
                 "ActualAltOK": flags["ActualAltOK"],
@@ -160,6 +209,14 @@ with tab4:
         run_sweep = st.button("开始扫描")
 
     if run_sweep:
+        sweep_policy = (
+            st.session_state.sparkle_policy_base
+            if overrides_used
+            else sparkle_policy
+        )
+        if sweep_policy == "manual":
+            sweep_policy = "alternate"
+
         v_archer_list = list(range(int(archer_min), int(archer_max) + 1, int(archer_step)))
         v_l_list = list(range(int(l_min), int(l_max) + 1, int(l_step)))
 
@@ -176,7 +233,7 @@ with tab4:
                     sparkle_initial_advance=sparkle_initial_advance,
                     sparkle_advance=sparkle_advance,
                     l_speed_bonus=l_speed_bonus,
-                    sparkle_policy=sparkle_policy,
+                    sparkle_policy=sweep_policy,  # type: ignore[arg-type]
                 )
                 a_df, adv_df, flg, _ = simulate_action((int(sweep_v_sparkle), int(va), int(vl)), sweep_params)
                 rows.append(

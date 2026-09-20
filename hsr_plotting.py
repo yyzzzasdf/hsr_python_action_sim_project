@@ -6,6 +6,11 @@ import plotly.graph_objects as go
 
 from hsr_core import SimParams
 
+# Keep in sync with plot_merged_action_axis layout (for Streamlit strip alignment).
+MERGED_AXIS_MARGIN_L = 60
+MERGED_AXIS_MARGIN_R = 40
+MERGED_AXIS_LAYOUT_WIDTH = 1000  # abstract units for column weight ratios
+
 
 def plot_merged_action_axis(
     action_df: pd.DataFrame,
@@ -103,7 +108,12 @@ def plot_merged_action_axis(
         legend=dict(orientation="v"),
         hovermode="closest",
         height=520,
-        margin=dict(l=60, r=40, t=60, b=60),
+        margin=dict(
+            l=MERGED_AXIS_MARGIN_L,
+            r=MERGED_AXIS_MARGIN_R,
+            t=60,
+            b=60,
+        ),
     )
 
     return fig

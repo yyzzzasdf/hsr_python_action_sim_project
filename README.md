@@ -10,7 +10,7 @@
 - 整数速度滑条
 - 花火开局行动提前 40%
 - 花火每次行动后给目标行动提前 50%
-- 默认目标顺序：Archer / L 交替
+- 默认目标顺序：Archer / L 交替；支持 **manual** 与右侧逐次手动拉条（改任一次即切手动）
 - Archer 速度固定
 - L 第一次行动后速度 +20
 - 自动判定花火拉条是否浪费、每次浪费多少
@@ -89,6 +89,7 @@ always_l
 min_progress
 max_remaining_av
 avoid_waste
+manual
 ```
 
 默认是：
@@ -97,12 +98,15 @@ avoid_waste
 alternate
 ```
 
+手动模式：侧边栏选 `manual`，或在「合并行动轴」图下方的横向 A/L 条（与花火红线对齐）修改任一次拉条；未覆盖回合仍按基准策略。点「恢复自动」清空覆盖。
+
 ## 文件说明
 
 ```text
 FRAMEWORK.md            项目架构与仿真流程（框架梳理）
 app.py                  Streamlit 交互界面
 hsr_ui.py               数字参数输入（键盘 + 滚轮）
+hsr_manual_ui.py        花火拉条手动覆盖面板
 hsr_core.py             核心事件驱动仿真
 hsr_plotting.py         Plotly 绘图函数
 run_demo.py             非交互演示

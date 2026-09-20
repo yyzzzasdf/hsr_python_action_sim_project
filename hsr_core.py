@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Literal
 
 import numpy as np
@@ -18,6 +18,17 @@ SparklePolicy = Literal[
     "min_progress",
     "max_remaining_av",
     "avoid_waste",
+    "manual",
+]
+
+SPARKLE_POLICY_OPTIONS: list[str] = [
+    "alternate",
+    "always_archer",
+    "always_l",
+    "min_progress",
+    "max_remaining_av",
+    "avoid_waste",
+    "manual",
 ]
 
 
@@ -46,8 +57,16 @@ class SimParams:
     # Same-AV action priority. Default: Sparkle > Archer > L.
     priority: tuple[int, int, int] = (SPARKLE, ARCHER, L)
 
-    # Sparkle targeting policy.
+    # Sparkle targeting policy (non-overridden turns).
     sparkle_policy: SparklePolicy = "alternate"
+
+    # SparkleActionNo (1-based) -> ARCHER or L index; overrides auto policy for that turn.
+    sparkle_manual_targets: dict[int, int] = field(default_factory=dict)
+
+
+def _policy_for_auto_turns(policy: SparklePolicy) -> SparklePolicy:
+    """Manual mode defaults to alternate when no per-turn override exists."""
+    return "alternate" if policy == "manual" else policy
 
 
 def choose_sparkle_target(
@@ -58,7 +77,13 @@ def choose_sparkle_target(
 ) -> int:
     """Choose Sparkle's advance target."""
 
-    policy = params.sparkle_policy
+    override = params.sparkle_manual_targets.get(sparkle_turn_count)
+    if override is not None:
+        if override not in (ARCHER, L):
+            raise ValueError(f"Manual target must be Archer ({ARCHER}) or L ({L}), got {override}.")
+        return override
+
+    policy = _policy_for_auto_turns(params.sparkle_policy)
 
     if policy == "alternate":
         return ARCHER if sparkle_turn_count % 2 == 1 else L
@@ -92,6 +117,23 @@ def choose_sparkle_target(
         return ARCHER if remain_archer >= remain_l else L
 
     raise ValueError(f"Unsupported sparkle_policy: {policy}")
+
+
+def auto_sparkle_target(
+    progress: np.ndarray,
+    speed: np.ndarray,
+    sparkle_turn_count: int,
+    params: SimParams,
+    *,
+    policy: SparklePolicy | None = None,
+) -> int:
+    """Target chosen by automatic policy only (ignores manual overrides)."""
+    auto_params = replace(
+        params,
+        sparkle_manual_targets={},
+        sparkle_policy=_policy_for_auto_turns(policy or params.sparkle_policy),
+    )
+    return choose_sparkle_target(progress, speed, sparkle_turn_count, auto_params)
 
 
 def check_alternation(action_df: pd.DataFrame, advance_df: pd.DataFrame) -> dict:
